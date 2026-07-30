@@ -6,17 +6,22 @@ import {
   Index,
   PrimaryColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 import { v7 as uuidv7 } from 'uuid';
-
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-}
+import { PatientProfile } from './patient-profile.entity';
+import { MedicalBackground } from './medical-background.entity';
+import { ClinicianProfile } from './clinician-profile.entity';
 
 export enum Provider {
   EMAIL = 'email',
   GOOGLE = 'google',
+}
+
+export enum UserRole {
+  PATIENT = 'patient',
+  CLINICIAN = 'clinician',
+  ADMIN = 'admin',
 }
 
 @Entity()
@@ -35,17 +40,17 @@ export class User {
   @Column({ type: 'boolean', default: false, name: 'is_verified' })
   isVerified!: boolean;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.PATIENT })
   role!: UserRole;
 
-  @Column({ type: 'varchar', length: 255, name: 'referral_code' })
-  referralCode!: string;
+  @OneToOne(() => PatientProfile, (profile) => profile.user, { cascade: true })
+  profile!: PatientProfile;
 
-  @Column({ type: 'varchar', length: 255, name: 'provider_id', nullable: true })
-  providerId!: string;
+  @OneToOne(() => MedicalBackground, (mb) => mb.user, { cascade: true })
+  medicalBackground!: MedicalBackground;
 
-  @Column({ type: 'enum', enum: Provider, nullable: true })
-  provider!: Provider;
+  @OneToOne(() => ClinicianProfile, (cp) => cp.user, { cascade: true })
+  clinicianProfile!: ClinicianProfile;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;

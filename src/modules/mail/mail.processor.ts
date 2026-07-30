@@ -21,6 +21,10 @@ export class MailProcessor extends WorkerHost {
       case QUEUE_JOB_NAMES.EMAIL.VERIFY_EMAIL:
         await this.handleVerifyEmail(job.data);
         break;
+
+      case QUEUE_JOB_NAMES.EMAIL.NOTIFY_ADMIN_PENDING_CLINICIAN:
+        await this.handleNotifyAdminOfPendingClinician(job.data);
+        break;
       default:
         this.logger.warn(`No handler for job name: ${job.name}`);
     }
@@ -35,6 +39,25 @@ export class MailProcessor extends WorkerHost {
       to,
       subject: 'Verify Your Email',
       html: verifyEmailTemplate(verificationUrl.toString()),
+    });
+  }
+
+  async handleNotifyAdminOfPendingClinician(data: { user: any }) {
+    const { user } = data;
+    const adminEmail = env.ADMIN_EMAIL;
+
+    const approvalUrl = new URL('/admin/clinicians', env.FRONTEND_URL);
+
+    await this.mailService.sendEmail({
+      to: adminEmail,
+      subject: 'New Clinician Registration Pending Approval',
+      html: `<p>A new clinician has registered and is pending approval.</p>
+             <p>Clinician Details:</p>
+             <ul>
+               <li>Name: ${user.name}</li>
+               <li>Email: ${user.email}</li>
+             </ul>
+             <p><a href="${approvalUrl}">Review Application</a></p>`,
     });
   }
 }

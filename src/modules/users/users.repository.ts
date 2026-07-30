@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
 import { UserResponse } from './dto/user.dto';
 import { User } from './entities/user.entity';
@@ -13,16 +12,23 @@ export class UsersRepository {
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+    return this.userRepository.findOne({
+      where: { email },
+      relations: { clinicianProfile: true },
+    });
+  }
+
+  async findById(id: string) {
+    return this.userRepository.findOne({
+      where: { id },
+      relations: { clinicianProfile: true },
+    });
   }
 
   async createUser(email: string, passwordHash: string): Promise<UserResponse> {
-    const referralCode = await this.generateReferralCode();
-
     const user = this.userRepository.create({
       email,
       passwordHash,
-      referralCode,
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -35,19 +41,6 @@ export class UsersRepository {
     return this.toUserResponse(updatedUser);
   }
 
-  async generateReferralCode(): Promise<string> {
-    const referralCode = randomBytes(4).toString('hex');
-    const existingUser = await this.userRepository.findOne({
-      where: { referralCode },
-    });
-
-    if (existingUser) {
-      return this.generateReferralCode();
-    }
-
-    return referralCode;
-  }
-
   private toUserResponse(user: User | null): UserResponse {
     if (!user) {
       throw new Error('User not found');
@@ -57,7 +50,6 @@ export class UsersRepository {
       id: user.id,
       email: user.email,
       isVerified: user.isVerified,
-      referralCode: user.referralCode,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
     };

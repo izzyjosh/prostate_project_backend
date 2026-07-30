@@ -7,6 +7,7 @@ export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 export const QUEUE_JOB_NAMES = {
   EMAIL: {
     VERIFY_EMAIL: 'verify-email',
+    NOTIFY_ADMIN_PENDING_CLINICIAN: 'notify-admin-pending-clinician',
   },
 } as const;
 

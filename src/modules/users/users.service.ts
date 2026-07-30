@@ -11,15 +11,15 @@ export class UsersService {
     return this.usersRepository.findByEmail(email);
   }
 
+  async findById(id: string) {
+    return this.usersRepository.findById(id);
+  }
+
   async createUser(email: string, passwordHash: string): Promise<UserResponse> {
     return this.usersRepository.createUser(email, passwordHash);
   }
 
   async updateUser(id: string, user: Partial<User>): Promise<UserResponse> {
     return this.usersRepository.updateUser(id, user);
-  }
-
-  async generateReferralCode(): Promise<string> {
-    return this.usersRepository.generateReferralCode();
   }
 }

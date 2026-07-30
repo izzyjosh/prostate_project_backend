@@ -1,20 +1,58 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsNotEmpty,
   IsString,
   Matches,
   MaxLength,
   MinLength,
+  IsDateString,
+  IsPhoneNumber,
+  IsOptional,
+  IsEnum,
+  IsArray,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { BloodGroup } from '../../users/entities/medical-background.entity';
 
 export class RegisterDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  firstName!: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  lastName!: string;
+
+  @IsDateString()
+  dateOfBirth!: string;
+
+  @IsPhoneNumber('NG')
+  phoneNumber!: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  occupation?: string;
+
+  @IsOptional()
+  @IsEnum(BloodGroup)
+  bloodGroup?: BloodGroup;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  knownConditions?: string[]; // e.g. ["Hypertension", "Diabetes"]
+
   @ApiProperty({
     example: 'user@example.com',
   })
   @IsEmail({}, { message: 'Invalid email format' })
-  @IsNotEmpty({ message: 'Email field is required' })
   @MaxLength(255, { message: 'Email must be at most 255 characters' })
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
@@ -24,12 +62,11 @@ export class RegisterDto {
   @ApiProperty({
     example: 'P@ssw0rd!',
   })
-  @IsString({ message: 'Password must be a string' })
-  @MinLength(8, { message: 'Password must be at least 8 characters' })
-  @MaxLength(100, { message: 'Password must be at most 100 characters' })
-  @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
+  @IsString()
+  @MinLength(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message:
-      'Password must include at least one uppercase letter, one number, and one special character.',
+      'Password must contain upper, lower case letters and a number or symbol',
   })
   password!: string;
 }

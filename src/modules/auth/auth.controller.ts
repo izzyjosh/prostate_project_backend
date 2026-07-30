@@ -7,6 +7,8 @@ import {
   Get,
   HttpStatus,
   Res,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
@@ -17,6 +19,11 @@ import { LoginDto } from './dto/login.dto';
 import { ResendEmail } from './dto/verify-email.dto';
 import { env } from '../../config/env';
 import { setAuthCookies } from './utils/cookie.util';
+import { UserRole } from '../users/entities/user.entity';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../common/interfaces/current-user.interface';
+import { RegisterClinicianDto } from './dto/register-clinician.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -28,7 +35,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @Post('register')
   register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password);
+    return this.authService.register(dto);
   }
 
   @Public()
@@ -66,5 +73,19 @@ export class AuthController {
   @Post('resend-verification-email')
   async resendVerificationEmail(@Body() dto: ResendEmail) {
     return this.authService.resendVerificationEmail(dto.email);
+  }
+
+  @Patch('clinicians/:id/approve')
+  @Roles(UserRole.ADMIN)
+  approveClinician(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.authService.approveClinician(id, user.sub);
+  }
+
+  @Post('register/clinician')
+  registerClinician(@Body() dto: RegisterClinicianDto) {
+    return this.authService.registerClinician(dto);
   }
 }
