@@ -17,6 +17,7 @@ export class MailProcessor extends WorkerHost {
   }
 
   async process(job: Job) {
+    this.logger.log(`Processing job: ${job.name}`);
     switch (job.name) {
       case QUEUE_JOB_NAMES.EMAIL.VERIFY_EMAIL:
         await this.handleVerifyEmail(job.data);
@@ -43,21 +44,28 @@ export class MailProcessor extends WorkerHost {
   }
 
   async handleNotifyAdminOfPendingClinician(data: { user: any }) {
-    const { user } = data;
-    const adminEmail = env.ADMIN_EMAIL;
+    try {
+      const { user } = data;
 
-    const approvalUrl = new URL('/admin/clinicians', env.FRONTEND_URL);
+      this.logger.log(`User: ${JSON.stringify(user)}`);
 
-    await this.mailService.sendEmail({
-      to: adminEmail,
-      subject: 'New Clinician Registration Pending Approval',
-      html: `<p>A new clinician has registered and is pending approval.</p>
-             <p>Clinician Details:</p>
-             <ul>
-               <li>Name: ${user.name}</li>
-               <li>Email: ${user.email}</li>
-             </ul>
-             <p><a href="${approvalUrl}">Review Application</a></p>`,
-    });
+      const adminEmail = env.ADMIN_EMAIL;
+      this.logger.log(`Admin email: ${adminEmail}`);
+
+      const approvalUrl = new URL('/admin/clinicians', env.FRONTEND_URL);
+
+      this.logger.log(`Sending admin notification for ${user.email}`);
+
+      await this.mailService.sendEmail({
+        to: adminEmail,
+        subject: 'New Clinician Registration Pending Approval',
+        html: `...`,
+      });
+
+      this.logger.log('Admin email sent successfully');
+    } catch (err) {
+      this.logger.error(err);
+      throw err; // Let BullMQ retry
+    }
   }
 }

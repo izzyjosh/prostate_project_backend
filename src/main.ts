@@ -8,6 +8,7 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import { RolesGuard } from './common/guards/roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,10 +19,9 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(','),
+    origin: 'http://localhost:3000', // your frontend
     credentials: true,
   });
-
   app.setGlobalPrefix('api', { exclude: ['health', 'search', 'auth'] });
 
   app.enableVersioning({
@@ -29,6 +29,7 @@ async function bootstrap() {
   });
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalGuards(new RolesGuard(app.get(Reflector)));
   app.enableShutdownHooks();
 
   if (env.SWAGGER_ENABLED === 'true') {

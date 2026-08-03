@@ -30,6 +30,17 @@ export function setAuthCookies(res: Response, tokens: CookieOptions): void {
   });
 }
 
+export function setAccessTokenCookie(res: Response, accessToken: string): void {
+  const isProduction = env.NODE_ENV === 'production';
+
+  res.cookie('access_token', accessToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+}
+
 export function clearAuthCookies(res: Response): void {
   const isProduction = env.NODE_ENV === 'production';
 

@@ -45,4 +45,14 @@ export class AuthUtils {
 
     return { accessToken, refreshToken };
   }
+
+  async verifyRefreshToken(refreshToken: string): Promise<{
+    sub: string;
+    email: string;
+    role: string;
+  }> {
+    return this.jwtService.verifyAsync(refreshToken, {
+      secret: env.JWT_REFRESH_SECRET,
+    });
+  }
 }

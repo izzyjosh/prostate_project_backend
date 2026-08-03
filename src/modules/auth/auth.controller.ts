@@ -9,6 +9,7 @@ import {
   Res,
   Patch,
   Param,
+  Req,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
@@ -18,12 +19,13 @@ import type { Response } from 'express';
 import { LoginDto } from './dto/login.dto';
 import { ResendEmail } from './dto/verify-email.dto';
 import { env } from '../../config/env';
-import { setAuthCookies } from './utils/cookie.util';
+import { setAccessTokenCookie, setAuthCookies } from './utils/cookie.util';
 import { UserRole } from '../users/entities/user.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../common/interfaces/current-user.interface';
 import { RegisterClinicianDto } from './dto/register-clinician.dto';
+import type { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -68,6 +70,28 @@ export class AuthController {
   }
 
   @Public()
+  @ApiOperation({ summary: 'Refresh access token' })
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  async refreshAccessToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.refreshAccessToken(
+      req.cookies?.refresh_token,
+    );
+    setAccessTokenCookie(res, result.accessToken);
+    return {
+      message: 'Access token refreshed successfully',
+    };
+  }
+
+  @Get('me')
+  getCurrentUser(@CurrentUser() user: CurrentUserData) {
+    return this.authService.getCurrentUser(user.sub);
+  }
+
+  @Public()
   @ApiOperation({ summary: 'Resend verification email' })
   @HttpCode(HttpStatus.OK)
   @Post('resend-verification-email')
@@ -85,6 +109,9 @@ export class AuthController {
   }
 
   @Post('register/clinician')
+  @Public()
+  @ApiOperation({ summary: 'Register a new clinician' })
+  @HttpCode(HttpStatus.CREATED)
   registerClinician(@Body() dto: RegisterClinicianDto) {
     return this.authService.registerClinician(dto);
   }

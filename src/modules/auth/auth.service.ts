@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { MailService } from '../mail/mail.service';
 import { AuthUtils } from './utils/auth.utils';
@@ -133,6 +134,7 @@ export class AuthService {
     return {
       message: 'Login successful',
       tokens: { accessToken, refreshToken },
+      role: `${user.role}`,
     };
   }
 
@@ -159,7 +161,9 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
     user.isVerified = true;
-    const updatedUser = await this.usersService.updateUser(user.id, user);
+    const updatedUser = await this.usersService.updateUser(user.id, {
+      isVerified: true,
+    });
 
     const { accessToken, refreshToken } = await this.authUtils.signToken(user);
 
@@ -222,14 +226,20 @@ export class AuthService {
       return newUser;
     });
 
+    const token = await this.authUtils.generateToken();
+    await this.authRepository.createToken(user.id, dto.email, token);
+    await this.mailService.queueVerificationEmail(dto.email, token);
+
     // notify admins a new clinician needs review, rather than sending
     // the usual "verify your email" link
+    this.logger.log('Sending admin notification...');
     await this.mailService.notifyAdminsOfPendingClinician(user);
+    this.logger.log('Admin notification sent.');
 
     return {
       userId: user.id,
       message:
-        'Registration received. Your account will be reviewed before activation.',
+        'Registration received. Your account will be reviewed before activation. A verification email has been sent to your email address.',
     };
   }
 
@@ -266,5 +276,76 @@ export class AuthService {
       clinicianId: approvedClinician.id,
       status: approvedClinician.clinicianProfile.status,
     };
+  }
+
+  async refreshAccessToken(refreshToken?: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
+
+    const payload = await this.authUtils.verifyRefreshToken(refreshToken);
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user || !user.isVerified) {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+
+    if (
+      user.role === UserRole.CLINICIAN &&
+      user.clinicianProfile?.status !== ClinicianStatus.APPROVED
+    ) {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+
+    const { accessToken } = await this.authUtils.signToken(user);
+
+    return { accessToken };
+  }
+
+  async getCurrentUser(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const base = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    if (user.role === UserRole.PATIENT && user.profile) {
+      return {
+        ...base,
+        firstName: user.profile.firstName,
+        lastName: user.profile.lastName,
+        phoneNumber: user.profile.phoneNumber,
+        dateOfBirth: user.profile.dateOfBirth,
+        address: user.profile.address,
+        occupation: user.medicalBackground?.occupation ?? '',
+        bloodGroup: user.medicalBackground?.bloodGroup ?? '',
+        knownConditions:
+          user.medicalBackground?.conditions?.map(
+            (condition) => condition.name,
+          ) ?? [],
+      };
+    }
+
+    if (user.role === UserRole.CLINICIAN && user.clinicianProfile) {
+      return {
+        ...base,
+        firstName: user.clinicianProfile.firstName,
+        lastName: user.clinicianProfile.lastName,
+        specialty: user.clinicianProfile.specialty,
+        hospital: user.clinicianProfile.hospitalAffiliation,
+        licenseNumber: user.clinicianProfile.licenseNumber,
+      };
+    }
+
+    return base;
   }
 }

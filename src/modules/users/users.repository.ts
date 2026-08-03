@@ -18,10 +18,14 @@ export class UsersRepository {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      relations: { clinicianProfile: true },
+      relations: {
+        profile: true,
+        clinicianProfile: true,
+        medicalBackground: true, // optional
+      },
     });
   }
 

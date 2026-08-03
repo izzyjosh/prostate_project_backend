@@ -26,7 +26,6 @@ export enum UserRole {
 
 @Entity()
 @Index(['email'], { unique: true })
-@Index(['referralCode'], { unique: true })
 export class User {
   @PrimaryColumn('uuid')
   id!: string;
@@ -39,6 +38,9 @@ export class User {
 
   @Column({ type: 'boolean', default: false, name: 'is_verified' })
   isVerified!: boolean;
+
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive!: boolean;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.PATIENT })
   role!: UserRole;

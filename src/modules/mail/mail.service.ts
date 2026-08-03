@@ -40,6 +40,7 @@ export class MailService {
           user,
         },
       );
+      this.logger.log('Admin notification email sent successfully');
     } catch (error) {
       this.logger.error(
         'Error adding pending clinician notification to queue',
