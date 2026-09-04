@@ -13,13 +13,28 @@ import { RolesGuard } from './common/guards/roles.guard';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const allowedOrigins = env.CORS_ORIGIN.split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
   // middlewares
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
 
   app.enableCors({
-    origin: 'http://localhost:3000', // your frontend
+    origin: (requestOrigin, callback) => {
+      if (
+        !requestOrigin ||
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(requestOrigin.replace(/\/$/, ''))
+      ) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   });
   app.setGlobalPrefix('api', { exclude: ['health', 'search', 'auth'] });
