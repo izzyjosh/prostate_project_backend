@@ -46,11 +46,13 @@ function formatAssessment(assessment: PatientAssessment) {
       recommendation: assessment.tierRecommendation,
       urgency: assessment.tierUrgency,
     },
+    automaticRecommendation: assessment.automaticRecommendation,
     breakdown: assessment.breakdown ?? {},
     selectedIds: assessment.selectedIds ?? [],
     timestamp: assessment.createdAt.toISOString(),
     status: assessment.status,
     doctorNotes: assessment.doctorNotes,
+    doctorRecommendation: assessment.doctorRecommendation,
     prescription: assessment.prescription,
     reviewedAt: assessment.reviewedAt
       ? assessment.reviewedAt.toISOString()
@@ -248,7 +250,7 @@ export class CliniciansService {
 
   async getPrescriptions(userId: string) {
     const reviewed = await this.getReviewed(userId);
-    return reviewed.filter((assessment) => assessment.prescription);
+    return reviewed;
   }
 
   async reviewAssessment(
@@ -271,8 +273,9 @@ export class CliniciansService {
 
     assessment.status = AssessmentStatus.CONFIRMED;
     assessment.confirmedDiagnosis = dto.diagnosis;
-    assessment.prescription = dto.prescription ?? null;
+    assessment.prescription = null;
     assessment.doctorNotes = dto.notes ?? null;
+    assessment.doctorRecommendation = dto.recommendation ?? null;
     assessment.followupDate = dto.followupDate ?? null;
     assessment.urgency = dto.urgency;
     assessment.reviewedAt = new Date();

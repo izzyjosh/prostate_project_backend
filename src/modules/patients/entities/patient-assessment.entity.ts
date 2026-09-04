@@ -55,6 +55,9 @@ export class PatientAssessment {
   @Column({ name: 'tier_urgency', length: 120 })
   tierUrgency!: string;
 
+  @Column({ name: 'automatic_recommendation', type: 'text', nullable: true })
+  automaticRecommendation!: string | null;
+
   @Column({ name: 'selected_ids', type: 'simple-array' })
   selectedIds!: string[];
 
@@ -76,6 +79,9 @@ export class PatientAssessment {
 
   @Column({ name: 'doctor_notes', type: 'text', nullable: true })
   doctorNotes!: string | null;
+
+  @Column({ name: 'doctor_recommendation', type: 'text', nullable: true })
+  doctorRecommendation!: string | null;
 
   @Column({ name: 'followup_date', type: 'date', nullable: true })
   followupDate!: string | null;

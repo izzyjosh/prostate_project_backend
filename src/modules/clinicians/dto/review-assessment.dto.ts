@@ -19,7 +19,8 @@ export class ReviewAssessmentDto {
 
   @IsOptional()
   @IsString()
-  prescription?: string;
+  @MaxLength(4000)
+  recommendation?: string;
 
   @IsOptional()
   @IsString()

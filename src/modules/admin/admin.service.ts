@@ -33,8 +33,10 @@ function formatAssessment(assessment: PatientAssessment) {
       recommendation: assessment.tierRecommendation,
       urgency: assessment.tierUrgency,
     },
+    automaticRecommendation: assessment.automaticRecommendation,
     status: assessment.status,
     doctorNotes: assessment.doctorNotes,
+    doctorRecommendation: assessment.doctorRecommendation,
     prescription: assessment.prescription,
     reviewedAt: assessment.reviewedAt
       ? assessment.reviewedAt.toISOString()
@@ -74,9 +76,7 @@ export class AdminService {
       return assessment.reviewedAt.toDateString() === new Date().toDateString();
     });
     const prescriptionsIssued = assessments.filter(
-      (assessment) =>
-        assessment.status === AssessmentStatus.CONFIRMED &&
-        Boolean(assessment.prescription),
+      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
     );
 
     const tierCounts = assessments.reduce(

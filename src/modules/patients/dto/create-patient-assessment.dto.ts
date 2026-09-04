@@ -31,6 +31,11 @@ export class CreatePatientAssessmentDto {
     urgency: string;
   };
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  automaticRecommendation?: string;
+
   @IsObject()
   breakdown!: Record<string, number>;
 

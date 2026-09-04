@@ -184,12 +184,15 @@ export class PatientsService {
       tierSummary: tier.summary,
       tierRecommendation: tier.recommendation,
       tierUrgency: tier.urgency,
+      automaticRecommendation:
+        dto.automaticRecommendation ?? tier.recommendation,
       selectedIds: dto.selectedIds,
       breakdown: dto.breakdown,
       status: AssessmentStatus.PENDING,
       confirmedDiagnosis: null,
       prescription: null,
       doctorNotes: null,
+      doctorRecommendation: null,
       followupDate: null,
       urgency: null,
       reviewedAt: null,
@@ -216,9 +219,7 @@ export class PatientsService {
   async getPrescriptions(userId: string) {
     const assessments = await this.getAssessments(userId);
     return assessments.filter(
-      (assessment) =>
-        assessment.status === AssessmentStatus.CONFIRMED &&
-        assessment.prescription,
+      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
     );
   }
 
@@ -226,9 +227,7 @@ export class PatientsService {
     const profile = await this.getProfile(userId);
     const assessments = await this.getAssessments(userId);
     const prescriptions = assessments.filter(
-      (assessment) =>
-        assessment.status === AssessmentStatus.CONFIRMED &&
-        Boolean(assessment.prescription),
+      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
     );
     const latest = assessments[0] ?? null;
 
@@ -257,11 +256,14 @@ export class PatientsService {
       maxScore: assessment.maxScore,
       percentage: assessment.percentage,
       tier,
+      automaticRecommendation:
+        assessment.automaticRecommendation ?? tier.recommendation,
       breakdown: assessment.breakdown ?? {},
       selectedIds: assessment.selectedIds ?? [],
       timestamp: assessment.createdAt.toISOString(),
       status: assessment.status,
       doctorNotes: assessment.doctorNotes,
+      doctorRecommendation: assessment.doctorRecommendation,
       prescription: assessment.prescription,
       reviewedAt: assessment.reviewedAt
         ? assessment.reviewedAt.toISOString()
