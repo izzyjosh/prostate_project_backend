@@ -34,6 +34,7 @@ export const env = createEnv({
     MAIL_FROM: z.string(),
     FRONTEND_URL: z.string(),
     ADMIN_EMAIL: z.string(),
+    ADMIN_PASSWORD: z.string(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

@@ -7,6 +7,7 @@ import {
 } from '../../common/constants/queue.constant';
 import { env } from '../../config/env';
 import { MailService } from './mail.service';
+import { pendingClinicianTemplate } from './templates/pending-clinician.template';
 import { verifyEmailTemplate } from './templates/verify-email.template';
 
 @Processor(QUEUE_NAMES.EMAIL)
@@ -52,14 +53,19 @@ export class MailProcessor extends WorkerHost {
       const adminEmail = env.ADMIN_EMAIL;
       this.logger.log(`Admin email: ${adminEmail}`);
 
-      const approvalUrl = new URL('/admin/clinicians', env.FRONTEND_URL);
-
       this.logger.log(`Sending admin notification for ${user.email}`);
 
       await this.mailService.sendEmail({
         to: adminEmail,
         subject: 'New Clinician Registration Pending Approval',
-        html: `...`,
+        html: pendingClinicianTemplate({
+          firstName: user.clinicianProfile?.firstName ?? '',
+          lastName: user.clinicianProfile?.lastName ?? '',
+          email: user.email,
+          licenseNumber: user.clinicianProfile?.licenseNumber ?? '',
+          specialty: user.clinicianProfile?.specialty,
+          hospitalAffiliation: user.clinicianProfile?.hospitalAffiliation,
+        }),
       });
 
       this.logger.log('Admin email sent successfully');

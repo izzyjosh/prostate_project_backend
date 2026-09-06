@@ -232,8 +232,11 @@ export class AuthService {
 
     // notify admins a new clinician needs review, rather than sending
     // the usual "verify your email" link
+    const registeredClinician = await this.usersService.findById(user.id);
     this.logger.log('Sending admin notification...');
-    await this.mailService.notifyAdminsOfPendingClinician(user);
+    await this.mailService.notifyAdminsOfPendingClinician(
+      registeredClinician ?? user,
+    );
     this.logger.log('Admin notification sent.');
 
     return {
