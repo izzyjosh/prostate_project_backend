@@ -36,7 +36,7 @@ export function setAccessTokenCookie(res: Response, accessToken: string): void {
   res.cookie('access_token', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 }
@@ -47,7 +47,7 @@ export function clearAuthCookies(res: Response): void {
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: isProduction ? 'none' : 'lax',
   });
 
   res.clearCookie('refresh_token', {
