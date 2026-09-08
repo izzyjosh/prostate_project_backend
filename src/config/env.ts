@@ -27,6 +27,8 @@ export const env = createEnv({
     JWT_ACCESS_EXPIRES: z.string(),
     JWT_REFRESH_EXPIRES: z.string(),
     REDIS_URL: z.string().url(),
+    RESEND_API_KEY: z.string(),
+    RESEND_FROM: z.string().default('Prostatecare <onboarding@resend.dev>'),
     MAIL_HOST: z.string(),
     MAIL_PORT: z.coerce.number(),
     MAIL_USER: z.string(),

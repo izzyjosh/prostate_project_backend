@@ -5,18 +5,18 @@ import {
   QUEUE_NAMES,
   QUEUE_JOB_NAMES,
 } from '../../common/constants/queue.constant';
-import * as nodemailer from 'nodemailer';
-import { nodemailerConfig } from '../../config/nodemailer.config';
+import { Resend } from 'resend';
+import { env } from '../../config/env';
 import { SendMail } from './interfaces/mail.interface';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private transporter: nodemailer.Transporter;
+  private readonly resend: Resend;
 
   constructor(@InjectQueue(QUEUE_NAMES.EMAIL) private emailQueue: Queue) {
-    this.transporter = nodemailer.createTransport(nodemailerConfig);
+    this.resend = new Resend(env.RESEND_API_KEY);
   }
 
   async queueVerificationEmail(to: string, token: string) {
@@ -52,10 +52,13 @@ export class MailService {
 
   async sendEmail(data: SendMail) {
     try {
-      await this.transporter.sendMail({
-        from: nodemailerConfig.auth.user,
+      const { error } = await this.resend.emails.send({
+        from: env.RESEND_FROM,
         ...data,
       });
+      if (error) {
+        throw new Error(error.message);
+      }
       this.logger.log('Email sent successfully');
     } catch (error) {
       this.logger.error('Error sending email', error);
