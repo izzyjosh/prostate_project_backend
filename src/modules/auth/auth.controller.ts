@@ -45,9 +45,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string, @Res() res: Response) {
-    const result = await this.authService.verifyEmail(token);
-    setAuthCookies(res, result.tokens);
-    return res.redirect(302, env.FRONTEND_URL);
+    try {
+      const result = await this.authService.verifyEmail(token);
+      setAuthCookies(res, result.tokens);
+      return res.redirect(
+        302,
+        `${env.FRONTEND_URL}/verify-email?status=success`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Email verification failed';
+      const verificationUrl = new URL('/verify-email', env.FRONTEND_URL);
+      verificationUrl.searchParams.set('status', 'error');
+      verificationUrl.searchParams.set('message', message);
+      return res.redirect(302, verificationUrl.toString());
+    }
   }
 
   @Public()
