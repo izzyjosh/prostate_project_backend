@@ -12,7 +12,7 @@ export class VerifyDto {
 
 export class ResendEmail {
   @ApiProperty({
-    example: 'joshuajosephizzyjosh@gmail.com',
+    example: 'example@gmail.com',
   })
   @IsString({ message: 'Email must be a string' })
   @IsNotEmpty({ message: 'Email is required' })
