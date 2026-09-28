@@ -15,7 +15,7 @@ import {
 import { Transform } from 'class-transformer';
 import { BloodGroup } from '../../users/entities/medical-background.entity';
 
-const isDateOfBirthAtLeast18 = (value: unknown): boolean => {
+const isDateOfBirthAtLeast40 = (value: unknown): boolean => {
   if (typeof value !== 'string') return false;
 
   const dateOfBirth = new Date(`${value}T00:00:00Z`);
@@ -26,21 +26,24 @@ const isDateOfBirthAtLeast18 = (value: unknown): boolean => {
 
   if (dateOfBirth > today) return false;
 
-  const eighteenthBirthday = new Date(today);
-  eighteenthBirthday.setUTCFullYear(today.getUTCFullYear() - 18);
+  const fortiethBirthday = new Date(today);
+  fortiethBirthday.setUTCFullYear(today.getUTCFullYear() - 40);
 
-  return dateOfBirth <= eighteenthBirthday;
+  return dateOfBirth <= fortiethBirthday;
 };
 
-const IsDateOfBirthAtLeast18 = () =>
+const IsDateOfBirthAtLeast40 = () =>
   ValidateBy(
     {
-      name: 'isDateOfBirthAtLeast18',
+      name: 'isDateOfBirthAtLeast40',
       validator: {
-        validate: isDateOfBirthAtLeast18,
+        validate: isDateOfBirthAtLeast40,
       },
     },
-    { message: 'Patient must be at least 18 years old' },
+    {
+      message:
+        'Registration is limited to patients who are at least 40 years old',
+    },
   );
 
 const IsDateOfBirthNotInFuture = () =>
@@ -75,7 +78,7 @@ export class RegisterDto {
 
   @IsDateString()
   @IsDateOfBirthNotInFuture()
-  @IsDateOfBirthAtLeast18()
+  @IsDateOfBirthAtLeast40()
   dateOfBirth!: string;
 
   @IsPhoneNumber('NG')
