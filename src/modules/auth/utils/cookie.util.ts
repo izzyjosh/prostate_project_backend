@@ -18,14 +18,16 @@ export function setAuthCookies(res: Response, tokens: CookieOptions): void {
   res.cookie('access_token', tokens.accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax',
+    path: '/',
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 
   res.cookie('refresh_token', tokens.refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 }
@@ -36,7 +38,8 @@ export function setAccessTokenCookie(res: Response, accessToken: string): void {
   res.cookie('access_token', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    sameSite: 'lax',
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 }
@@ -47,12 +50,14 @@ export function clearAuthCookies(res: Response): void {
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
+    sameSite: 'lax',
   });
 
   res.clearCookie('refresh_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    path: '/',
+    sameSite: 'lax',
   });
 }
