@@ -24,7 +24,6 @@ import { UserRole } from '../users/entities/user.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../common/interfaces/current-user.interface';
-import { RegisterClinicianDto } from './dto/register-clinician.dto';
 import type { Request } from 'express';
 
 @ApiTags('Auth')
@@ -109,22 +108,5 @@ export class AuthController {
   @Post('resend-verification-email')
   async resendVerificationEmail(@Body() dto: ResendEmail) {
     return this.authService.resendVerificationEmail(dto.email);
-  }
-
-  @Patch('clinicians/:id/approve')
-  @Roles(UserRole.ADMIN)
-  approveClinician(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserData,
-  ) {
-    return this.authService.approveClinician(id, user.sub);
-  }
-
-  @Post('register/clinician')
-  @Public()
-  @ApiOperation({ summary: 'Register a new clinician' })
-  @HttpCode(HttpStatus.CREATED)
-  registerClinician(@Body() dto: RegisterClinicianDto) {
-    return this.authService.registerClinician(dto);
   }
 }

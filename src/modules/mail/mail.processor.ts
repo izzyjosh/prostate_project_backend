@@ -7,7 +7,6 @@ import {
 } from '../../common/constants/queue.constant';
 import { env } from '../../config/env';
 import { MailService } from './mail.service';
-import { pendingClinicianTemplate } from './templates/pending-clinician.template';
 import { verifyEmailTemplate } from './templates/verify-email.template';
 
 @Processor(QUEUE_NAMES.EMAIL)
@@ -24,9 +23,6 @@ export class MailProcessor extends WorkerHost {
         await this.handleVerifyEmail(job.data);
         break;
 
-      case QUEUE_JOB_NAMES.EMAIL.NOTIFY_ADMIN_PENDING_CLINICIAN:
-        await this.handleNotifyAdminOfPendingClinician(job.data);
-        break;
       default:
         this.logger.warn(`No handler for job name: ${job.name}`);
     }
@@ -42,36 +38,5 @@ export class MailProcessor extends WorkerHost {
       subject: 'Verify Your Email',
       html: verifyEmailTemplate(verificationUrl.toString()),
     });
-  }
-
-  async handleNotifyAdminOfPendingClinician(data: { user: any }) {
-    try {
-      const { user } = data;
-
-      this.logger.log(`User: ${JSON.stringify(user)}`);
-
-      const adminEmail = env.ADMIN_EMAIL;
-      this.logger.log(`Admin email: ${adminEmail}`);
-
-      this.logger.log(`Sending admin notification for ${user.email}`);
-
-      await this.mailService.sendEmail({
-        to: adminEmail,
-        subject: 'New Clinician Registration Pending Approval',
-        html: pendingClinicianTemplate({
-          firstName: user.clinicianProfile?.firstName ?? '',
-          lastName: user.clinicianProfile?.lastName ?? '',
-          email: user.email,
-          licenseNumber: user.clinicianProfile?.licenseNumber ?? '',
-          specialty: user.clinicianProfile?.specialty,
-          hospitalAffiliation: user.clinicianProfile?.hospitalAffiliation,
-        }),
-      });
-
-      this.logger.log('Admin email sent successfully');
-    } catch (err) {
-      this.logger.error(err);
-      throw err; // Let BullMQ retry
-    }
   }
 }

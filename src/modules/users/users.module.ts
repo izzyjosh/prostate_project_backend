@@ -6,7 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersRepository } from './users.repository';
 import { PatientProfile } from './entities/patient-profile.entity';
 import { MedicalBackground } from './entities/medical-background.entity';
-import { ClinicianProfile } from './entities/clinician-profile.entity';
 import { MedicalCondition } from './entities/medical-condition.entity';
 
 @Module({
@@ -15,7 +14,6 @@ import { MedicalCondition } from './entities/medical-condition.entity';
       User,
       PatientProfile,
       MedicalBackground,
-      ClinicianProfile,
       MedicalCondition,
     ]),
   ],

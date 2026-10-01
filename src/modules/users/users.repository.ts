@@ -14,7 +14,6 @@ export class UsersRepository {
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
-      relations: { clinicianProfile: true },
     });
   }
 
@@ -23,7 +22,6 @@ export class UsersRepository {
       where: { id },
       relations: {
         profile: true,
-        clinicianProfile: true,
         medicalBackground: true, // optional
       },
     });

@@ -5,14 +5,7 @@ import {
 } from '@nestjs/common';
 import { DataSource, In } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
-import {
-  ClinicianProfile,
-  ClinicianStatus,
-} from '../users/entities/clinician-profile.entity';
-import {
-  PatientAssessment,
-  AssessmentStatus,
-} from '../patients/entities/patient-assessment.entity';
+import { PatientAssessment } from '../patients/entities/patient-assessment.entity';
 import { SystemSetting } from './entities/system-setting.entity';
 import { UpdateAdminSettingDto } from './dto/admin-action.dto';
 
@@ -58,9 +51,8 @@ export class AdminService {
     const userRepo = this.dataSource.getRepository(User);
     const assessmentRepo = this.dataSource.getRepository(PatientAssessment);
 
-    const [patients, clinicians, admins, assessments] = await Promise.all([
+    const [patients, admins, assessments] = await Promise.all([
       userRepo.count({ where: { role: UserRole.PATIENT } }),
-      userRepo.count({ where: { role: UserRole.CLINICIAN } }),
       userRepo.count({ where: { role: UserRole.ADMIN } }),
       assessmentRepo.find({
         relations: { user: true },
@@ -68,17 +60,10 @@ export class AdminService {
       }),
     ]);
 
-    const pendingReviews = assessments.filter(
-      (assessment) => assessment.status === AssessmentStatus.PENDING,
-    );
     const reviewedToday = assessments.filter((assessment) => {
       if (!assessment.reviewedAt) return false;
       return assessment.reviewedAt.toDateString() === new Date().toDateString();
     });
-    const prescriptionsIssued = assessments.filter(
-      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
-    );
-
     const tierCounts = assessments.reduce(
       (accumulator, assessment) => {
         accumulator[assessment.tierKey] =
@@ -98,11 +83,8 @@ export class AdminService {
     return {
       stats: {
         patients,
-        clinicians,
         admins,
         assessments: assessments.length,
-        pendingReviews: pendingReviews.length,
-        prescriptionsIssued: prescriptionsIssued.length,
       },
       riskTierDistribution: [
         { tier: 'urgent', count: tierCounts.urgent ?? 0 },
@@ -116,7 +98,6 @@ export class AdminService {
         .map(([id, count]) => ({ id, count })),
       recentAssessments: assessments.slice(0, 10).map(formatAssessment),
       reviewedToday: reviewedToday.slice(0, 10).map(formatAssessment),
-      pendingReviews: pendingReviews.slice(0, 10).map(formatAssessment),
     };
   }
 
@@ -124,7 +105,6 @@ export class AdminService {
     const userRepo = this.dataSource.getRepository(User);
     const users = await userRepo.find({
       relations: {
-        clinicianProfile: true,
         profile: true,
         medicalBackground: true,
       },
@@ -139,20 +119,9 @@ export class AdminService {
       isActive: user.isActive,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
-      firstName:
-        user.role === UserRole.CLINICIAN
-          ? (user.clinicianProfile?.firstName ?? '')
-          : (user.profile?.firstName ?? ''),
-      lastName:
-        user.role === UserRole.CLINICIAN
-          ? (user.clinicianProfile?.lastName ?? '')
-          : (user.profile?.lastName ?? ''),
-      status:
-        user.role === UserRole.CLINICIAN
-          ? (user.clinicianProfile?.status ?? null)
-          : user.isVerified
-            ? 'verified'
-            : 'pending',
+      firstName: user.profile?.firstName ?? '',
+      lastName: user.profile?.lastName ?? '',
+      status: user.isVerified ? 'verified' : 'pending',
     }));
   }
 
@@ -160,7 +129,6 @@ export class AdminService {
     const userRepo = this.dataSource.getRepository(User);
     const user = await userRepo.findOne({
       where: { id: userId },
-      relations: { clinicianProfile: true },
     });
 
     if (!user) {
@@ -168,13 +136,6 @@ export class AdminService {
     }
 
     user.isActive = false;
-    if (user.role === UserRole.CLINICIAN && user.clinicianProfile) {
-      user.clinicianProfile.status = ClinicianStatus.REJECTED;
-      await this.dataSource
-        .getRepository(ClinicianProfile)
-        .save(user.clinicianProfile);
-    }
-
     await userRepo.save(user);
     return {
       message: 'User suspended successfully',
@@ -187,7 +148,6 @@ export class AdminService {
     const userRepo = this.dataSource.getRepository(User);
     const user = await userRepo.findOne({
       where: { id: userId },
-      relations: { clinicianProfile: true },
     });
 
     if (!user) {
@@ -212,69 +172,6 @@ export class AdminService {
     }
 
     return { message: 'User removed successfully', userId };
-  }
-
-  async approveClinician(userId: string, approvedBy: string) {
-    const userRepo = this.dataSource.getRepository(User);
-    const clinicianRepo = this.dataSource.getRepository(ClinicianProfile);
-    const clinician = await userRepo.findOne({
-      where: { id: userId },
-      relations: { clinicianProfile: true },
-    });
-
-    if (
-      !clinician ||
-      clinician.role !== UserRole.CLINICIAN ||
-      !clinician.clinicianProfile
-    ) {
-      throw new NotFoundException('Clinician not found');
-    }
-
-    clinician.isActive = true;
-    clinician.isVerified = true;
-    clinician.clinicianProfile.status = ClinicianStatus.APPROVED;
-    clinician.clinicianProfile.approvedBy = approvedBy;
-    clinician.clinicianProfile.approvedAt = new Date();
-
-    await userRepo.save(clinician);
-    await clinicianRepo.save(clinician.clinicianProfile);
-
-    return {
-      message: 'Clinician approved successfully',
-      clinicianId: clinician.id,
-      status: clinician.clinicianProfile.status,
-    };
-  }
-
-  async rejectClinician(userId: string, approvedBy: string) {
-    const userRepo = this.dataSource.getRepository(User);
-    const clinicianRepo = this.dataSource.getRepository(ClinicianProfile);
-    const clinician = await userRepo.findOne({
-      where: { id: userId },
-      relations: { clinicianProfile: true },
-    });
-
-    if (
-      !clinician ||
-      clinician.role !== UserRole.CLINICIAN ||
-      !clinician.clinicianProfile
-    ) {
-      throw new NotFoundException('Clinician not found');
-    }
-
-    clinician.isActive = false;
-    clinician.clinicianProfile.status = ClinicianStatus.REJECTED;
-    clinician.clinicianProfile.approvedBy = approvedBy;
-    clinician.clinicianProfile.approvedAt = new Date();
-
-    await userRepo.save(clinician);
-    await clinicianRepo.save(clinician.clinicianProfile);
-
-    return {
-      message: 'Clinician rejected successfully',
-      clinicianId: clinician.id,
-      status: clinician.clinicianProfile.status,
-    };
   }
 
   async listAssessments() {

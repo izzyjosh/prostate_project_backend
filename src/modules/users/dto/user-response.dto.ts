@@ -23,13 +23,4 @@ export interface CurrentUserResponse {
     gender: string;
     dateOfBirth: Date;
   };
-
-  clinicianProfile?: {
-    firstName: string;
-    lastName: string;
-    phoneNumber: string;
-    specialty: string;
-    hospital: string;
-    licenseNumber: string;
-  };
 }

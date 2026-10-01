@@ -18,7 +18,6 @@ import { BullModule } from '@nestjs/bullmq';
 import { bullConfig } from './config/bull.config';
 import { MailModule } from './modules/mail/mail.module';
 import { PatientsModule } from './modules/patients/patients.module';
-import { CliniciansModule } from './modules/clinicians/clinicians.module';
 import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
@@ -36,7 +35,6 @@ import { AdminModule } from './modules/admin/admin.module';
     UsersModule,
     MailModule,
     PatientsModule,
-    CliniciansModule,
     AdminModule,
   ],
   controllers: [],

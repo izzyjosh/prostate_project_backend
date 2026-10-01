@@ -11,7 +11,6 @@ import {
 import { v7 as uuidv7 } from 'uuid';
 import { PatientProfile } from './patient-profile.entity';
 import { MedicalBackground } from './medical-background.entity';
-import { ClinicianProfile } from './clinician-profile.entity';
 
 export enum Provider {
   EMAIL = 'email',
@@ -20,7 +19,6 @@ export enum Provider {
 
 export enum UserRole {
   PATIENT = 'patient',
-  CLINICIAN = 'clinician',
   ADMIN = 'admin',
 }
 
@@ -50,9 +48,6 @@ export class User {
 
   @OneToOne(() => MedicalBackground, (mb) => mb.user, { cascade: true })
   medicalBackground!: MedicalBackground;
-
-  @OneToOne(() => ClinicianProfile, (cp) => cp.user, { cascade: true })
-  clinicianProfile!: ClinicianProfile;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
   createdAt!: Date;

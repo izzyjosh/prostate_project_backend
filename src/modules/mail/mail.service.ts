@@ -8,7 +8,6 @@ import {
 import { Resend } from 'resend';
 import { env } from '../../config/env';
 import { SendMail } from './interfaces/mail.interface';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class MailService {
@@ -28,24 +27,6 @@ export class MailService {
       this.logger.log('Verification email added to queue successfully');
     } catch (error) {
       this.logger.error('Error adding verification email to queue', error);
-      throw error;
-    }
-  }
-
-  async notifyAdminsOfPendingClinician(user: User) {
-    try {
-      await this.emailQueue.add(
-        QUEUE_JOB_NAMES.EMAIL.NOTIFY_ADMIN_PENDING_CLINICIAN,
-        {
-          user,
-        },
-      );
-      this.logger.log('Admin notification email sent successfully');
-    } catch (error) {
-      this.logger.error(
-        'Error adding pending clinician notification to queue',
-        error,
-      );
       throw error;
     }
   }

@@ -188,7 +188,7 @@ export class PatientsService {
         dto.automaticRecommendation ?? tier.recommendation,
       selectedIds: dto.selectedIds,
       breakdown: dto.breakdown,
-      status: AssessmentStatus.PENDING,
+      status: AssessmentStatus.CONFIRMED,
       confirmedDiagnosis: null,
       prescription: null,
       doctorNotes: null,
@@ -218,17 +218,13 @@ export class PatientsService {
 
   async getPrescriptions(userId: string) {
     const assessments = await this.getAssessments(userId);
-    return assessments.filter(
-      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
-    );
+    return assessments.filter(() => true);
   }
 
   async getDashboard(userId: string) {
     const profile = await this.getProfile(userId);
     const assessments = await this.getAssessments(userId);
-    const prescriptions = assessments.filter(
-      (assessment) => assessment.status === AssessmentStatus.CONFIRMED,
-    );
+    const prescriptions = assessments.filter(() => true);
     const latest = assessments[0] ?? null;
 
     return {

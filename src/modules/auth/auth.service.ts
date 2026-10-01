@@ -19,12 +19,7 @@ import { PatientProfile } from '../users/entities/patient-profile.entity';
 import { MedicalCondition } from '../users/entities/medical-condition.entity';
 import { MedicalBackground } from '../users/entities/medical-background.entity';
 import { Token } from './entities/token.entity';
-import { RegisterClinicianDto } from './dto/register-clinician.dto';
 import { UserRole } from '../users/entities/user.entity';
-import {
-  ClinicianProfile,
-  ClinicianStatus,
-} from '../users/entities/clinician-profile.entity';
 
 @Injectable()
 export class AuthService {
@@ -117,13 +112,6 @@ export class AuthService {
     }
 
     // in login logic, after password check
-    if (
-      user.role === UserRole.CLINICIAN &&
-      user.clinicianProfile.status !== ClinicianStatus.APPROVED
-    ) {
-      throw new ForbiddenException('Your account is pending admin approval');
-    }
-
     const { accessToken, refreshToken } = await this.authUtils.signToken(user);
     await this.usersService.updateUser(user.id, {
       lastLogin: new Date(),
@@ -197,90 +185,6 @@ export class AuthService {
     };
   }
 
-  // auth.service.ts
-  async registerClinician(dto: RegisterClinicianDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) throw new ConflictException('Email already registered');
-
-    const passwordHash = await this.authUtils.hashPassword(dto.password);
-
-    const user = await this.datasource.transaction(async (manager) => {
-      const newUser = manager.create(User, {
-        email: dto.email,
-        passwordHash,
-        role: UserRole.CLINICIAN, // hardcoded server-side, never from client
-      });
-      await manager.save(newUser);
-
-      const clinicianProfile = manager.create(ClinicianProfile, {
-        user: newUser,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        licenseNumber: dto.licenseNumber,
-        specialty: dto.specialty,
-        hospitalAffiliation: dto.hospitalAffiliation,
-        status: ClinicianStatus.PENDING,
-      });
-      await manager.save(clinicianProfile);
-
-      return newUser;
-    });
-
-    const token = await this.authUtils.generateToken();
-    await this.authRepository.createToken(user.id, dto.email, token);
-    await this.mailService.queueVerificationEmail(dto.email, token);
-
-    // notify admins a new clinician needs review, rather than sending
-    // the usual "verify your email" link
-    const registeredClinician = await this.usersService.findById(user.id);
-    this.logger.log('Sending admin notification...');
-    await this.mailService.notifyAdminsOfPendingClinician(
-      registeredClinician ?? user,
-    );
-    this.logger.log('Admin notification sent.');
-
-    return {
-      userId: user.id,
-      message:
-        'Registration received. Your account will be reviewed before activation. A verification email has been sent to your email address.',
-    };
-  }
-
-  async approveClinician(clinicianId: string, approvedById: string) {
-    const approvedClinician = await this.datasource.transaction(
-      async (manager) => {
-        const clinician = await manager.findOne(User, {
-          where: { id: clinicianId },
-          relations: { clinicianProfile: true },
-        });
-
-        if (!clinician) {
-          throw new NotFoundException('Clinician does not exist');
-        }
-
-        if (!clinician.clinicianProfile) {
-          throw new BadRequestException('User is not a clinician');
-        }
-
-        clinician.isVerified = true;
-        clinician.clinicianProfile.status = ClinicianStatus.APPROVED;
-        clinician.clinicianProfile.approvedBy = approvedById;
-        clinician.clinicianProfile.approvedAt = new Date();
-
-        await manager.save(clinician);
-        await manager.save(clinician.clinicianProfile);
-
-        return clinician;
-      },
-    );
-
-    return {
-      message: 'Clinician approved successfully',
-      clinicianId: approvedClinician.id,
-      status: approvedClinician.clinicianProfile.status,
-    };
-  }
-
   async refreshAccessToken(refreshToken?: string) {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is missing');
@@ -290,13 +194,6 @@ export class AuthService {
     const user = await this.usersService.findById(payload.sub);
 
     if (!user || !user.isVerified) {
-      throw new UnauthorizedException('Refresh token is invalid or expired');
-    }
-
-    if (
-      user.role === UserRole.CLINICIAN &&
-      user.clinicianProfile?.status !== ClinicianStatus.APPROVED
-    ) {
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
@@ -335,17 +232,6 @@ export class AuthService {
           user.medicalBackground?.conditions?.map(
             (condition) => condition.name,
           ) ?? [],
-      };
-    }
-
-    if (user.role === UserRole.CLINICIAN && user.clinicianProfile) {
-      return {
-        ...base,
-        firstName: user.clinicianProfile.firstName,
-        lastName: user.clinicianProfile.lastName,
-        specialty: user.clinicianProfile.specialty,
-        hospital: user.clinicianProfile.hospitalAffiliation,
-        licenseNumber: user.clinicianProfile.licenseNumber,
       };
     }
 
