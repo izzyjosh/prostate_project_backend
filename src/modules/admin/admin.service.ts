@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { DataSource, In } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { PatientAssessment } from '../patients/entities/patient-assessment.entity';
 import { SystemSetting } from './entities/system-setting.entity';
@@ -28,15 +24,6 @@ function formatAssessment(assessment: PatientAssessment) {
     },
     automaticRecommendation: assessment.automaticRecommendation,
     status: assessment.status,
-    doctorNotes: assessment.doctorNotes,
-    doctorRecommendation: assessment.doctorRecommendation,
-    prescription: assessment.prescription,
-    reviewedAt: assessment.reviewedAt
-      ? assessment.reviewedAt.toISOString()
-      : null,
-    confirmedDiagnosis: assessment.confirmedDiagnosis,
-    followupDate: assessment.followupDate,
-    urgency: assessment.urgency,
     timestamp: assessment.createdAt.toISOString(),
     selectedIds: assessment.selectedIds ?? [],
     breakdown: assessment.breakdown ?? {},
@@ -60,10 +47,6 @@ export class AdminService {
       }),
     ]);
 
-    const reviewedToday = assessments.filter((assessment) => {
-      if (!assessment.reviewedAt) return false;
-      return assessment.reviewedAt.toDateString() === new Date().toDateString();
-    });
     const tierCounts = assessments.reduce(
       (accumulator, assessment) => {
         accumulator[assessment.tierKey] =
@@ -97,7 +80,6 @@ export class AdminService {
         .slice(0, 10)
         .map(([id, count]) => ({ id, count })),
       recentAssessments: assessments.slice(0, 10).map(formatAssessment),
-      reviewedToday: reviewedToday.slice(0, 10).map(formatAssessment),
     };
   }
 

@@ -15,10 +15,6 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
-  async createUser(email: string, passwordHash: string): Promise<UserResponse> {
-    return this.usersRepository.createUser(email, passwordHash);
-  }
-
   async updateUser(id: string, user: Partial<User>): Promise<UserResponse> {
     return this.usersRepository.updateUser(id, user);
   }

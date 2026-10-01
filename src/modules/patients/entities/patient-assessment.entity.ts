@@ -1,6 +1,5 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
@@ -67,30 +66,9 @@ export class PatientAssessment {
   @Column({
     type: 'enum',
     enum: AssessmentStatus,
-    default: AssessmentStatus.PENDING,
+    default: AssessmentStatus.CONFIRMED,
   })
   status!: AssessmentStatus;
-
-  @Column({ name: 'confirmed_diagnosis', type: 'text', nullable: true })
-  confirmedDiagnosis!: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  prescription!: string | null;
-
-  @Column({ name: 'doctor_notes', type: 'text', nullable: true })
-  doctorNotes!: string | null;
-
-  @Column({ name: 'doctor_recommendation', type: 'text', nullable: true })
-  doctorRecommendation!: string | null;
-
-  @Column({ name: 'followup_date', type: 'date', nullable: true })
-  followupDate!: string | null;
-
-  @Column({ name: 'urgency', type: 'varchar', length: 20, nullable: true })
-  urgency!: string | null;
-
-  @Column({ name: 'reviewed_at', type: 'timestamptz', nullable: true })
-  reviewedAt!: Date | null;
 
   @Column({
     name: 'created_at',

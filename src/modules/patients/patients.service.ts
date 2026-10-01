@@ -189,13 +189,6 @@ export class PatientsService {
       selectedIds: dto.selectedIds,
       breakdown: dto.breakdown,
       status: AssessmentStatus.CONFIRMED,
-      confirmedDiagnosis: null,
-      prescription: null,
-      doctorNotes: null,
-      doctorRecommendation: null,
-      followupDate: null,
-      urgency: null,
-      reviewedAt: null,
     });
 
     const saved = await assessmentRepo.save(assessment);
@@ -216,28 +209,27 @@ export class PatientsService {
     );
   }
 
-  async getPrescriptions(userId: string) {
+  async getRecommendations(userId: string) {
     const assessments = await this.getAssessments(userId);
-    return assessments.filter(() => true);
+    return assessments;
   }
 
   async getDashboard(userId: string) {
     const profile = await this.getProfile(userId);
     const assessments = await this.getAssessments(userId);
-    const prescriptions = assessments.filter(() => true);
     const latest = assessments[0] ?? null;
 
     return {
       profile,
       stats: {
         assessments: assessments.length,
-        prescriptions: prescriptions.length,
+        recommendations: assessments.length,
         latestRiskLevel: latest?.tier.label ?? '—',
         latestAssessmentDate: latest?.timestamp ?? null,
       },
       latestAssessment: latest,
       assessments,
-      prescriptions,
+      recommendations: assessments,
     };
   }
 
@@ -258,15 +250,6 @@ export class PatientsService {
       selectedIds: assessment.selectedIds ?? [],
       timestamp: assessment.createdAt.toISOString(),
       status: assessment.status,
-      doctorNotes: assessment.doctorNotes,
-      doctorRecommendation: assessment.doctorRecommendation,
-      prescription: assessment.prescription,
-      reviewedAt: assessment.reviewedAt
-        ? assessment.reviewedAt.toISOString()
-        : null,
-      confirmedDiagnosis: assessment.confirmedDiagnosis,
-      followupDate: assessment.followupDate,
-      urgency: assessment.urgency,
     };
   }
 }

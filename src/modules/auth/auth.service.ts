@@ -1,10 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { MailService } from '../mail/mail.service';
@@ -18,13 +17,10 @@ import { User } from '../users/entities/user.entity';
 import { PatientProfile } from '../users/entities/patient-profile.entity';
 import { MedicalCondition } from '../users/entities/medical-condition.entity';
 import { MedicalBackground } from '../users/entities/medical-background.entity';
-import { Token } from './entities/token.entity';
 import { UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
@@ -111,7 +107,6 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    // in login logic, after password check
     const { accessToken, refreshToken } = await this.authUtils.signToken(user);
     await this.usersService.updateUser(user.id, {
       lastLogin: new Date(),
@@ -126,7 +121,7 @@ export class AuthService {
     };
   }
 
-  async logout(res: Response) {
+  logout(res: Response) {
     clearAuthCookies(res);
 
     return {

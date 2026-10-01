@@ -17,7 +17,6 @@ async function bootstrap() {
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
-  // middlewares
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());

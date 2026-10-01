@@ -22,19 +22,9 @@ export class UsersRepository {
       where: { id },
       relations: {
         profile: true,
-        medicalBackground: true, // optional
+        medicalBackground: true,
       },
     });
-  }
-
-  async createUser(email: string, passwordHash: string): Promise<UserResponse> {
-    const user = this.userRepository.create({
-      email,
-      passwordHash,
-    });
-
-    const savedUser = await this.userRepository.save(user);
-    return this.toUserResponse(savedUser);
   }
 
   async updateUser(id: string, user: Partial<User>): Promise<UserResponse> {

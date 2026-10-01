@@ -32,9 +32,9 @@ export class PatientsController {
     return this.patientsService.getAssessments(user.sub);
   }
 
-  @Get('prescriptions')
-  getPrescriptions(@CurrentUser() user: CurrentUserData) {
-    return this.patientsService.getPrescriptions(user.sub);
+  @Get('recommendations')
+  getRecommendations(@CurrentUser() user: CurrentUserData) {
+    return this.patientsService.getRecommendations(user.sub);
   }
 
   @Post('assessments')

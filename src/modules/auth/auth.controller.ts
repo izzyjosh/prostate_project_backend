@@ -7,8 +7,6 @@ import {
   Get,
   HttpStatus,
   Res,
-  Patch,
-  Param,
   Req,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -20,8 +18,6 @@ import { LoginDto } from './dto/login.dto';
 import { ResendEmail } from './dto/verify-email.dto';
 import { env } from '../../config/env';
 import { setAccessTokenCookie, setAuthCookies } from './utils/cookie.util';
-import { UserRole } from '../users/entities/user.entity';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../common/interfaces/current-user.interface';
 import type { Request } from 'express';
@@ -76,7 +72,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response) {
     return this.authService.logout(res);
   }
 
