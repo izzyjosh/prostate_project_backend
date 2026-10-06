@@ -2,8 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { PatientAssessment } from '../patients/entities/patient-assessment.entity';
-import { SystemSetting } from './entities/system-setting.entity';
-import { UpdateAdminSettingDto } from './dto/admin-action.dto';
 
 function formatAssessment(assessment: PatientAssessment) {
   return {
@@ -164,28 +162,5 @@ export class AdminService {
     });
 
     return assessments.map(formatAssessment);
-  }
-
-  async getSettings() {
-    const repo = this.dataSource.getRepository(SystemSetting);
-    return repo.find({ order: { key: 'ASC' } });
-  }
-
-  async upsertSetting(key: string, dto: UpdateAdminSettingDto) {
-    const repo = this.dataSource.getRepository(SystemSetting);
-    let setting = await repo.findOne({ where: { key } });
-
-    if (!setting) {
-      setting = repo.create({
-        key,
-        value: dto.value ?? null,
-        description: dto.description ?? null,
-      });
-    } else {
-      setting.value = dto.value ?? setting.value;
-      setting.description = dto.description ?? setting.description;
-    }
-
-    return repo.save(setting);
   }
 }

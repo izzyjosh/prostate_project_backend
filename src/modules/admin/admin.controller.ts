@@ -1,16 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { AdminService } from './admin.service';
-import { UpdateAdminSettingDto } from './dto/admin-action.dto';
 
 @Controller('admin')
 @Roles(UserRole.ADMIN)
@@ -45,15 +36,5 @@ export class AdminController {
   @Get('assessments')
   listAssessments() {
     return this.adminService.listAssessments();
-  }
-
-  @Get('settings')
-  getSettings() {
-    return this.adminService.getSettings();
-  }
-
-  @Put('settings/:key')
-  updateSetting(@Param('key') key: string, @Body() dto: UpdateAdminSettingDto) {
-    return this.adminService.upsertSetting(key, dto);
   }
 }
