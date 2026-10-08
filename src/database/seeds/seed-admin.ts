@@ -36,7 +36,7 @@ async function seedAdmin() {
   }
 }
 
-// seedAdmin().catch((error: unknown) => {
-//   logger.error('Failed to seed the admin account.', error);
-//   process.exitCode = 1;
-// });
+seedAdmin().catch((error: unknown) => {
+  logger.error('Failed to seed the admin account.', error);
+  process.exitCode = 1;
+});
