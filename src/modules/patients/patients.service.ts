@@ -15,6 +15,7 @@ import {
 } from './entities/patient-assessment.entity';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { CreatePatientAssessmentDto } from './dto/create-patient-assessment.dto';
+import { runRiskEvaluation } from './risk-evaluation';
 
 const RISK_TIERS = {
   urgent: {
@@ -212,6 +213,10 @@ export class PatientsService {
   async getRecommendations(userId: string) {
     const assessments = await this.getAssessments(userId);
     return assessments;
+  }
+
+  evaluateRisk(selectedIds: string[]) {
+    return runRiskEvaluation(selectedIds);
   }
 
   async getDashboard(userId: string) {

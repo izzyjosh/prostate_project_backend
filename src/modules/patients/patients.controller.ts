@@ -4,6 +4,7 @@ import type { CurrentUserData } from '../../common/interfaces/current-user.inter
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { CreatePatientAssessmentDto } from './dto/create-patient-assessment.dto';
+import { EvaluateRiskDto } from './dto/evaluate-risk.dto';
 
 @Controller('patients')
 export class PatientsController {
@@ -35,6 +36,11 @@ export class PatientsController {
   @Get('recommendations')
   getRecommendations(@CurrentUser() user: CurrentUserData) {
     return this.patientsService.getRecommendations(user.sub);
+  }
+
+  @Post('assessments/evaluate')
+  evaluateRisk(@Body() dto: EvaluateRiskDto) {
+    return this.patientsService.evaluateRisk(dto.selectedIds);
   }
 
   @Post('assessments')
